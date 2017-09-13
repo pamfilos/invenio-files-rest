@@ -567,7 +567,7 @@ class ObjectResource(ContentNegotiatedMethodView):
 
     @staticmethod
     def send_object(bucket, obj, expected_chksum=None, logger_data=None,
-                    restricted=True):
+                    restricted=True, create_dir=True):
         """Send an object for a given bucket.
 
         :param bucket: The bucket (instance or id) to get the object from.
@@ -588,7 +588,7 @@ class ObjectResource(ContentNegotiatedMethodView):
                 'File checksum mismatch detected.', extra=logger_data)
 
         file_downloaded.send(current_app._get_current_object(), obj=obj)
-        return obj.send_file(restricted=restricted)
+        return obj.send_file(restricted=restricted, create_dir=create_dir)
 
     #
     # MultipartObject helpers
@@ -742,11 +742,12 @@ class ObjectResource(ContentNegotiatedMethodView):
         :param upload_id: The upload ID. (Default: ``None``)
         :returns: A Flask response.
         """
+
         if upload_id:
             return self.multipart_listparts(bucket, key, upload_id)
         else:
             obj = self.get_object(bucket, key, version_id)
-            return self.send_object(bucket, obj)
+            return self.send_object(bucket, obj, create_dir=False)
 
     @use_kwargs(post_args)
     @pass_bucket
