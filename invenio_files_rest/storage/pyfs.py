@@ -49,10 +49,12 @@ class PyFSFileStorage(FileStorage):
 
     """
 
-    def __init__(self, fileurl, size=None, modified=None, clean_dir=True):
+    def __init__(self, fileurl, size=None, modified=None, clean_dir=True,
+                 create_dir=True):
         """Storage initialization."""
         self.fileurl = fileurl
         self.clean_dir = clean_dir
+        self.create_dir = create_dir
         super(PyFSFileStorage, self).__init__(size=size, modified=modified)
 
     def _get_fs(self, create_dir=True):
@@ -61,7 +63,8 @@ class PyFSFileStorage(FileStorage):
         filename = basename(self.fileurl)
 
         return (
-            opener.opendir(filedir, writeable=True, create_dir=create_dir),
+            opener.opendir(filedir, writeable=True,
+                           create_dir=self.create_dir),
             filename
         )
 
@@ -147,11 +150,16 @@ class PyFSFileStorage(FileStorage):
 def pyfs_storage_factory(fileinstance=None, default_location=None,
                          default_storage_class=None,
                          filestorage_class=PyFSFileStorage, fileurl=None,
-                         size=None, modified=None, clean_dir=True):
+                         size=None, modified=None, clean_dir=True, **kwargs):
     """Get factory function for creating a PyFS file storage instance."""
     # Either the FileInstance needs to be specified or all filestorage
     # class parameters need to be specified
     assert fileinstance or (fileurl and size)
+
+    # Create dir in the FS if not already there
+    create_dir = True
+    if 'create_dir' in kwargs:
+        create_dir = kwargs['create_dir']
 
     if fileinstance:
         # FIXME: Code here should be refactored since it assumes a lot on the
@@ -174,5 +182,5 @@ def pyfs_storage_factory(fileinstance=None, default_location=None,
                 current_app.config['FILES_REST_STORAGE_PATH_SPLIT_LENGTH'],
             )
 
-    return filestorage_class(
-        fileurl, size=size, modified=modified, clean_dir=clean_dir)
+    return filestorage_class(fileurl, size=size, modified=modified,
+                             clean_dir=clean_dir, create_dir=create_dir)

@@ -614,8 +614,8 @@ class ObjectResource(ContentNegotiatedMethodView):
         return self.make_response('', 204)
 
     @staticmethod
-    def send_object(bucket, obj, expected_chksum=None,
-                    logger_data=None, restricted=True, as_attachment=False):
+    def send_object(bucket, obj, expected_chksum=None, logger_data=None, 
+                    restricted=True, as_attachment=False, create_dir=True):
         """Send an object for a given bucket.
 
         :param bucket: The bucket (instance or id) to get the object from.
@@ -638,7 +638,8 @@ class ObjectResource(ContentNegotiatedMethodView):
 
         file_downloaded.send(current_app._get_current_object(), obj=obj)
         return obj.send_file(restricted=restricted,
-                             as_attachment=as_attachment)
+                             as_attachment=as_attachment,
+                             create_dir=create_dir)
 
     #
     # MultipartObject helpers
@@ -793,6 +794,7 @@ class ObjectResource(ContentNegotiatedMethodView):
         :param download: The download flag. (Default: ``None``)
         :returns: A Flask response.
         """
+
         if upload_id:
             return self.multipart_listparts(bucket, key, upload_id)
         else:
@@ -800,7 +802,8 @@ class ObjectResource(ContentNegotiatedMethodView):
             # If 'download' is missing from query string it will have
             # the value None.
             return self.send_object(bucket, obj,
-                                    as_attachment=download is not None)
+                                    as_attachment=download is not None,
+                                    create_dir=False)
 
     @use_kwargs(post_args)
     @pass_bucket
